@@ -1,0 +1,42 @@
+name: Obfuscate All JavaScript Files
+
+on:
+  push:
+    branches:
+      - main  # اجرای Workflow هنگام Push به شاخه "main"
+
+jobs:
+  obfuscate:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. دریافت کدهای مخزن
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      # 2. نصب Node.js
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      # 3. نصب ابزار JavaScript Obfuscator
+      - name: Install JavaScript Obfuscator
+        run: |
+          npm install javascript-obfuscator -g
+
+      # 4. پیدا کردن و Obfuscate کردن همه فایل‌های JavaScript
+      - name: Obfuscate JavaScript Files
+        run: |
+          for file in $(find . -type f -name "*.js"); do
+            javascript-obfuscator "$file" --output "$file"
+          done
+
+      # 5. Commit و Push فایل‌های Obfuscated
+      - name: Commit and Push Obfuscated Files
+        run: |
+          git config --global user.name "github-actions"
+          git config --global user.email "actions@github.com"
+          git add .
+          git commit -m "Obfuscated all JavaScript files"
+          git push
