@@ -1,0 +1,46 @@
+name: Obfuscate JavaScript Code
+
+on:
+  push:
+    branches:
+      - main  # تغییرات در شاخه "main" این فرآیند را اجرا می‌کند
+
+jobs:
+  obfuscate:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. دریافت کدهای مخزن
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      # 2. نصب Node.js
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      # 3. نصب وابستگی‌ها (مثل javascript-obfuscator)
+      - name: Install dependencies
+        run: |
+          npm install javascript-obfuscator -g
+
+      # 4. اجرای Obfuscation روی فایل‌های JavaScript
+      - name: Obfuscate files
+        run: |
+          mkdir obfuscated
+          for file in $(find ./src -name '*.js'); do
+            javascript-obfuscator "$file" --output "obfuscated/$(basename $file)"
+          done
+
+      # 5. ذخیره فایل‌های Obfuscated در شاخه‌ای جدید
+      - name: Commit and push obfuscated files
+        run: |
+          git config --global user.name "github-actions"
+          git config --global user.email "actions@github.com"
+          git checkout -b obfuscated
+          mv obfuscated/* .
+          rm -rf src
+          git add .
+          git commit -m "Obfuscated files"
+          git push origin obfuscated --force
